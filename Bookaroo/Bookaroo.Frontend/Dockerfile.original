@@ -1,0 +1,29 @@
+# Use the official ASP.NET Core runtime as a parent image
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+WORKDIR /app
+EXPOSE 8080
+EXPOSE 8081
+
+# Use the .NET SDK image to build the app and run migrations
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+ARG BUILD_CONFIGURATION=Release
+WORKDIR /src
+COPY ["Bookaroo/Bookaroo.csproj", "Bookaroo/"]
+RUN dotnet restore "./Bookaroo/Bookaroo.csproj"
+COPY . .
+WORKDIR "/src/Bookaroo"
+RUN dotnet build "./Bookaroo.csproj" -c $BUILD_CONFIGURATION -o /app/build
+
+# Publish the app to a folder
+FROM build AS publish
+ARG BUILD_CONFIGURATION=Release
+RUN dotnet publish "./Bookaroo.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+
+# Use the .NET SDK image to run the app and for running migrations
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+COPY --from=build /src/Bookaroo/Bookaroo.csproj .
+RUN dotnet tool install --global dotnet-ef
+ENV PATH="$PATH:/root/.dotnet/tools"
+ENTRYPOINT ["dotnet", "Bookaroo.dll"]

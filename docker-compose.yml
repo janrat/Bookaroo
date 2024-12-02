@@ -1,0 +1,34 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    ports:
+      - 1433:1433
+    volumes:
+      - "./sql/data:/var/opt/mssql/data"
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Y3#pX9@kQ!
+
+  bookaroo:
+    image: ${DOCKER_REGISTRY-}bookaroo
+    build:
+      context: .
+      dockerfile: Bookaroo/Dockerfile
+    ports:
+      - "8080:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80;
+    depends_on:
+      - sqlserver
+
+  bookaroo.frontend:
+    build:
+      context: ./Bookaroo/Bookaroo.Frontend
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: development
+    ports:
+      - "4212:80"
+    depends_on:
+      - bookaroo

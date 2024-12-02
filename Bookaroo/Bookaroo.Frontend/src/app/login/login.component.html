@@ -1,0 +1,26 @@
+<div class="d-flex justify-content-center align-items-center min-vh-100">
+  <div class="login-container border p-4 rounded shadow bg-white">
+    <h2 class="text-center">{{ 'login' | translate }}</h2>
+    <form #loginForm="ngForm" (ngSubmit)="login(loginForm)">
+      <div class="form-group mb-3" [ngClass]="{'has-error': loginForm.submitted && loginForm.controls['username']?.invalid}">
+        <label for="username" class="form-label">{{ 'username' | translate }}</label>
+        <input type="text" id="username" [(ngModel)]="username" name="username" class="form-control" required />
+        <div *ngIf="loginForm.submitted && loginForm.controls['username']?.invalid" class="text-danger">
+          {{ 'usernameRequired' | translate }}
+        </div>
+      </div>
+      <div class="form-group mb-3" [ngClass]="{'has-error': loginForm.submitted && loginForm.controls['password']?.invalid}">
+        <label for="password" class="form-label">{{ 'password' | translate }}</label>
+        <input type="password" id="password" [(ngModel)]="password" name="password" class="form-control" required />
+        <div *ngIf="loginForm.submitted && loginForm.controls['password']?.invalid" class="text-danger">
+          {{ 'passwordRequired' | translate }}
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary w-100">{{ 'login' | translate }}</button>
+    </form>
+    <div *ngIf="errorMessage" class="alert alert-danger mt-3" role="alert">
+      {{ errorMessage }}
+    </div>
+  </div>
+</div>
+

@@ -1,0 +1,141 @@
+<!-- Logout -->
+<div class="d-flex justify-content-end">
+  <button class="btn btn-danger" (click)="logout()">
+    {{ 'logout' | translate }}
+  </button>
+</div>
+
+<div class="container mt-4">
+  <!-- Search and Actions -->
+  <div class="row mb-3">
+    <div class="col-md-12 d-flex align-items-center">
+      <div class="input-group w-75">
+        <input type="text" class="form-control" placeholder="{{ 'searchByName' | translate }}" [(ngModel)]="searchTerm" />
+        <button class="btn btn-primary" (click)="getAllBooks()">{{ 'search' | translate }}</button>
+      </div>
+      <button *ngIf="userRole === 'Admin'" class="btn btn-success ms-auto" (click)="openBookModal(null)">{{ 'addBook' | translate }}</button>
+    </div>
+  </div>
+
+  <!-- Books Section -->
+  <div class="accordion" id="booksAccordion">
+    <div class="accordion-item" *ngFor="let book of books; let i = index">
+      <h2 class="accordion-header d-flex align-items-center justify-content-between" id="heading{{i}}">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                [attr.data-bs-target]="'#collapse' + i" aria-expanded="false" [attr.aria-controls]="'collapse' + i">
+          {{book.title}} ({{ 'author' | translate }}:
+          <span *ngFor="let author of book.authors; let j = index">
+            {{ author.firstName }} {{ author.lastName }}<span *ngIf="j < book.authors.length - 1">, </span>
+          </span>)
+        </button>
+      </h2>
+      <div [id]="'collapse' + i" class="accordion-collapse collapse" [attr.aria-labelledby]="'heading' + i"
+           [attr.data-bs-parent]="'#booksAccordion'">
+        <div class="accordion-body">
+          <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <p class="mb-1"><strong>{{ 'published' | translate }}:</strong> {{ book.publicationDate | date:'dd.MM.yyyy' }}</p>
+                  <p class="mb-1"><strong>{{ 'publisher' | translate }}:</strong> {{ book.publisher?.name }}</p>
+                  <p class="mb-1"><strong>{{ 'isbn' | translate }}:</strong> {{ book.isbn }}</p>
+                </div>
+                <div class="col-md-6">
+                  <p class="mb-1"><strong>{{ 'pages' | translate }}:</strong> {{ book.pages }}</p>
+                  <p class="mb-1"><strong>{{ 'price' | translate }}:</strong> {{ book.price | currency }}</p>
+                  <p class="mb-1"><strong>{{ 'category' | translate }}:</strong> {{ book.category?.name }}</p>
+                </div>
+              </div>
+
+              <div class="d-flex justify-content-end">
+                <button *ngIf="userRole === 'Admin'" class="btn btn-primary me-2" (click)="openBookModal(book)">
+                  {{ 'editBook' | translate }}
+                </button>
+                <button *ngIf="userRole === 'Admin'" class="btn btn-danger" (click)="deleteBook(book)">
+                  {{ 'deleteBook' | translate }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="bookModal" tabindex="-1" aria-labelledby="bookModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="bookModalLabel">
+            {{ (selectedBook ? 'editBook' : 'addBook') | translate }}
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form #bookForm="ngForm">
+            <div class="mb-3">
+              <label for="bookTitle" class="form-label">{{ 'title' | translate }}</label>
+              <input type="text" id="bookTitle" class="form-control" [(ngModel)]="newBook.title" name="bookTitle" required />
+              <div *ngIf="bookForm.controls['bookTitle']?.invalid && bookForm.controls['bookTitle']?.touched">
+                {{ 'titleRequired' | translate }}
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="bookISBN" class="form-label">{{ 'isbn' | translate }}</label>
+              <input type="text" id="bookISBN" class="form-control" [(ngModel)]="newBook.isbn" name="bookISBN" required />
+              <div *ngIf="bookForm.controls['bookISBN']?.invalid && bookForm.controls['bookISBN']?.touched">
+                {{ 'isbnRequired' | translate }}
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="bookPublicationDate" class="form-label">{{ 'publicationDate' | translate }}</label>
+              <input type="date" id="bookPublicationDate" class="form-control" [(ngModel)]="newBookPublicationDate" name="bookPublicationDate" />
+            </div>
+
+            <div class="mb-3">
+              <label for="bookPages" class="form-label">{{ 'pages' | translate }}</label>
+              <input type="number" id="bookPages" class="form-control" [(ngModel)]="newBook.pages" name="bookPages" />
+            </div>
+
+            <div class="mb-3">
+              <label for="bookPrice" class="form-label">{{ 'price' | translate }}</label>
+              <input type="number" id="bookPrice" class="form-control" [(ngModel)]="newBook.price" name="bookPrice" />
+            </div>
+
+            <div class="mb-3">
+              <label for="bookCategoryId" class="form-label">{{ 'categoryId' | translate }}</label>
+              <input type="number" id="bookCategoryId" class="form-control" [(ngModel)]="newBook.categoryId" name="bookCategoryId" />
+            </div>
+
+            <div class="mb-3">
+              <label for="bookPublisherId" class="form-label">{{ 'publisherId' | translate }}</label>
+              <input type="number" id="bookPublisherId" class="form-control" [(ngModel)]="newBook.publisherId" name="bookPublisherId" />
+            </div>
+
+            <div class="mb-3">
+              <label for="bookAuthorIds" class="form-label">{{ 'authorIds' | translate }}</label>
+              <input type="text" id="bookAuthorIds" class="form-control" placeholder="{{ 'enterAuthorsPlaceholder' | translate }}" [(ngModel)]="authorIdsInput" (ngModelChange)="updateAuthorIds()" name="bookAuthorIds" />
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ 'close' | translate }}</button>
+          <button type="button" class="btn btn-primary" (click)="saveBook(bookForm)">
+            {{ (selectedBook ? 'saveChanges' : 'addBook') | translate }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div class="d-flex mt-4">
+    <span>{{ 'page' | translate }} {{page}} {{ 'of' | translate }} {{totalPages}}</span>
+    <div class="ms-auto">
+      <button class="btn btn-secondary" (click)="previousPage()" [disabled]="page === 1">{{ 'previous' | translate }}</button>
+      <button class="btn btn-secondary" (click)="nextPage()" [disabled]="page === totalPages">{{ 'next' | translate }}</button>
+    </div>
+  </div>
+</div>
